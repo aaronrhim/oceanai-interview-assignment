@@ -25,25 +25,29 @@
    - To enable live LLM, copy `.env.example` to `.env.local` and set the key.
 5. Continue from "Next up" below.
 
-## Current status (paused after detail pages + PDF + production build)
+## Current status (paused after landing page lands; smoke + polish pass next)
 
 **Build status:** `npx next build` is GREEN. All routes compile.
 
 ```
 Route (app)                                 Size  First Load JS
-○ /                                      171 B         118 kB
-○ /_not-found                            998 B         116 kB
-ƒ /api/events                            132 B         115 kB
-ƒ /api/pipeline                          132 B         115 kB
-ƒ /api/state                             132 B         115 kB
-ƒ /contract/[id]                         171 B         118 kB
-ƒ /contract/[id]/pdf                     132 B         115 kB
-ƒ /dashboard                           50.3 kB         168 kB
-ƒ /lead/[id]                             171 B         118 kB
-ƒ /underwriting/[id]                     171 B         118 kB
-ƒ /underwriting/[id]/pdf                 132 B         115 kB
+○ /                                     31.3 kB         156 kB
+○ /_not-found                            995 B          116 kB
+ƒ /api/events                            132 B          115 kB
+ƒ /api/pipeline                          132 B          115 kB
+ƒ /api/state                             132 B          115 kB
+ƒ /contract/[id]                         168 B          119 kB
+ƒ /contract/[id]/pdf                     132 B          115 kB
+ƒ /dashboard                           43.8 kB          169 kB
+ƒ /lead/[id]                             168 B          119 kB
+ƒ /underwriting/[id]                     168 B          119 kB
+ƒ /underwriting/[id]/pdf                 132 B          115 kB
 First Load JS shared by all             115 kB
 ```
+
+`/` is 156 kB First Load — the page-specific 31.3 kB is essentially gsap core
+(~30 kB minified+gz). 6 kB over the 150 kB soft target. tsparticles + r3f +
+three are correctly tree-split out (would add 200 kB+ to initial if eager).
 
 **Functionally working today:**
 
@@ -66,21 +70,65 @@ First Load JS shared by all             115 kB
 
 **Not yet built:**
 
-- **Landing page (`/`)** — currently a stub. Needs the 3D agent-network orb,
-  tsparticles ambient bg, GSAP hero timeline, "Run Demo" CTA. (Task #11)
 - **Smoke test + bundle audit + polish pass.** (Task #14)
 
 **Open verification gaps:**
 
-- Production build is green but a full live-pipeline run hasn't been done in
-  this session (no API key set). Smoke test should run with both
-  `DEMO_MODE=fixtures` and a real key.
+- Production build is green and `/` SSRs HTTP 200 with the full hero markup,
+  but the GSAP timeline + r3f orb + particles have only been smoke-checked at
+  the HTML level — no real browser run yet. They need a visual pass on the
+  demo machine.
+- View Transition hop (`/` → `/dashboard` via `document.startViewTransition`)
+  has not been visually verified in a browser that supports the API; CSS
+  rules in `globals.css` (`::view-transition-old/new(root)`) should fire when
+  it does. Needs visual confirmation.
+- A full live-pipeline run hasn't been done in this session (no API key set).
+  Smoke test should run with both `DEMO_MODE=fixtures` and a real key.
 - The dashboard mounts the SSE hook unconditionally; need to verify
   reconnect behavior when the dev server restarts.
 
 ## Decisions log
 
 Append-only. Newest at the top.
+
+### 2026-05-08 — Landing page (`/`) built; gsap + r3f + tsparticles all wired
+
+- New files:
+  - `app/page.tsx` — server entry, sets metadata, reads `liveAgentsEnabled()`
+    so the eyebrow chip can show "Live Anthropic" vs. "Heuristic fallback".
+  - `components/landing/landing-shell.tsx` — client orchestrator. Owns the
+    GSAP timeline, the View-Transition hop, and the layout.
+  - `components/landing/particles-bg.tsx` — tsparticles via `@tsparticles/react`
+    + `@tsparticles/slim`. Capped 60 particles, `pauseOnBlur`,
+    `pauseOnOutsideViewport`, `fpsLimit:60`. Lazy via `next/dynamic` w/ `ssr:false`.
+  - `components/landing/agent-network.tsx` — r3f scene: wireframe icosahedron
+    core + soft glow sphere + 4 satellites orbiting at different radii/speeds.
+    DPR capped `[1, 1.5]`, `meshBasicMaterial` only (no expensive shaders).
+    Lazy via `next/dynamic` w/ `ssr:false`.
+- GSAP timeline: `gsap.context(...)` scoped to `containerRef`, animates
+  `.hero-brand → .hero-eyebrow → .hero-title → .hero-sub → .hero-pipeline > * →
+  .hero-cta → .hero-skip → .hero-stats > *` with overlapping eases. Cleaned
+  up via `ctx.revert()` on unmount.
+- `prefers-reduced-motion`: detected via `window.matchMedia` — when reduced,
+  GSAP is skipped entirely and elements stay at their visible default
+  (because we use `gsap.from()`, the natural state is opacity:1).
+- View-Transition hop: feature-detected `document.startViewTransition`,
+  falls back to plain `router.push`. CSS animations defined in `globals.css`
+  (`::view-transition-old/new(root)` → vt-fade-out / vt-fade-in) take care
+  of the cross-fade automatically.
+- FX layers (particles + 3D) deferred one frame past mount via
+  `requestAnimationFrame` so the first paint is the static hero (no white
+  flash, no FOIT-style stall waiting on canvas).
+- Skip-link below the CTA: `<Link href="/dashboard" prefetch>` — gives the
+  demo machine an escape hatch if the 3D scene chugs.
+- Bundle: `/` is now 156 kB First Load (was a 118 kB stub). The 31.3 kB
+  page-specific is gsap core. r3f + drei + three.js + tsparticles are NOT in
+  the initial chunk (they'd push it past 350 kB if eager). 6 kB over the
+  150 kB soft target — acceptable for a demo with a planned animation lib.
+- Lint: only NEW lint warning was `noArrayIndexKey` on the satellite map,
+  fixed by keying on the satellite's `radius+phase`. The two
+  `noSvgWithoutTitle` warnings on the Logo/PlayIcon SVGs are consistent
+  with the existing dashboard Logo (already lints the same way).
 
 ### 2026-05-08 — Detail pages + PDFs landed; production build green
 
@@ -128,7 +176,7 @@ oceanai/
 ├── app/
 │   ├── layout.tsx                                ← root, Geist fonts, dark color-scheme
 │   ├── globals.css                               ← Tailwind v4 @theme + reduced-motion + utilities
-│   ├── page.tsx                                  ← STUB landing (replace in task #11)
+│   ├── page.tsx                                  ← landing (server entry)
 │   ├── dashboard/
 │   │   ├── page.tsx
 │   │   └── dashboard-shell.tsx                   ← SSE-driven live view
@@ -166,6 +214,10 @@ oceanai/
 │   ├── event-log.tsx
 │   ├── supervisor-panel.tsx
 │   ├── trigger-bar.tsx
+│   ├── landing/
+│   │   ├── landing-shell.tsx                    ← client orchestrator + GSAP
+│   │   ├── particles-bg.tsx                     ← tsparticles, lazy ssr:false
+│   │   └── agent-network.tsx                    ← r3f orb, lazy ssr:false
 │   └── pdf/
 │       ├── styles.ts
 │       ├── underwriting-report.tsx
@@ -195,17 +247,19 @@ oceanai/
 
 ## Next up (in order)
 
-1. **Task #11 — Landing page (`/`).** Replace `app/page.tsx` stub with:
-   - tsparticles ambient background (lazy, capped 60 particles, pause-on-blur)
-   - r3f agent-network orb (lazy, single accent piece, dynamic import w/
-     `{ ssr: false }`)
-   - GSAP hero timeline orchestrating the type-in / button reveal
-   - "Run Demo" → View Transitions hop to `/dashboard`
-   - Skip-link for low-end machines
-2. **Task #14 — Smoke + bundle audit + polish.**
-   - Run with a real `ANTHROPIC_API_KEY` end-to-end at least once.
-   - `prefers-reduced-motion` verification.
-   - Bundle audit: keep dashboard <200KB and `/` <150KB initial JS.
+1. **Task #14 — Smoke + bundle audit + polish.**
+   - Run `/` and `/dashboard` in a real browser. Confirm GSAP timeline plays,
+     particles + 3D orb mount cleanly, and the "Run the demo" CTA does the
+     View-Transition cross-fade into `/dashboard`.
+   - Run with a real `ANTHROPIC_API_KEY` end-to-end at least once. Trigger a
+     lead, watch the pipeline animate, open the underwriting + contract PDFs.
+   - Trigger a deliberately-bad lead (low score / huge ask) and confirm the
+     supervisor surfaces a "needs human" alert with rationale.
+   - `prefers-reduced-motion` verification: macOS / Chrome devtools toggle.
+     GSAP should bypass; particles/3D should still render but feel calmer.
+   - Bundle audit: dashboard <200 KB ✅ (169 KB), `/` is 156 KB (6 KB over the
+     150 KB soft target — gsap core. Decide whether to lazy-load gsap or
+     leave it.).
    - Demo-script run-through (the 7-step in the spec).
 
 ## Commit log highlights
@@ -214,4 +268,5 @@ oceanai/
 - `fdd48e0` docs: approved 3-agent demo spec + session tracker
 - `f94427c` feat: scaffold Next 15 + R19 + Tailwind v4 + agent infra
 - `40a0d7c` feat: agents (lead/underwriting/contract/supervisor) + dashboard + SSE
-- *next* checkpoint: detail pages + PDFs (about to commit)
+- `8d98a7d` feat: detail pages (lead/underwriting/contract) + react-pdf reports
+- *next* checkpoint: landing page (gsap + r3f + tsparticles) (about to commit)
