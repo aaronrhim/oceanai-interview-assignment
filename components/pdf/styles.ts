@@ -1,0 +1,133 @@
+import { StyleSheet } from "@react-pdf/renderer";
+
+export const colors = {
+  bg: "#FFFFFF",
+  ink: "#0B0E12",
+  muted: "#5A6573",
+  line: "#D9DEE5",
+  accent: "#0BB1C1",
+  ok: "#179C72",
+  warn: "#B57A0B",
+  err: "#C03A3A",
+};
+
+export const styles = StyleSheet.create({
+  page: {
+    paddingTop: 56,
+    paddingBottom: 56,
+    paddingHorizontal: 56,
+    fontSize: 10.5,
+    fontFamily: "Helvetica",
+    color: colors.ink,
+    backgroundColor: colors.bg,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+  },
+  brand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  brandMark: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.accent,
+  },
+  brandName: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1,
+  },
+  brandSub: {
+    fontSize: 8,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  title: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: -0.4,
+    marginTop: 28,
+  },
+  subtitle: {
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 4,
+  },
+  section: {
+    marginTop: 22,
+  },
+  sectionLabel: {
+    fontSize: 8,
+    color: colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+    marginBottom: 6,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.line,
+  },
+  rowKey: { color: colors.muted },
+  rowValue: { fontFamily: "Helvetica-Bold" },
+  body: { lineHeight: 1.5 },
+  bigStat: {
+    flexDirection: "row",
+    gap: 24,
+    marginTop: 8,
+  },
+  statBlock: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 4,
+  },
+  statLabel: {
+    fontSize: 8,
+    color: colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  statValue: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    marginTop: 6,
+  },
+  flag: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginTop: 4,
+  },
+  flagDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.warn,
+    marginTop: 4,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 24,
+    left: 56,
+    right: 56,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    fontSize: 8,
+    color: colors.muted,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.line,
+  },
+});
