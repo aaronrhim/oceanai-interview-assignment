@@ -10,7 +10,7 @@ export interface RawLead {
   company: string;
   email: string;
   requestedCreditUsd: number;
-  source: "cold-email" | "linkedin" | "apollo" | "tradeshow" | "referral" | "ads";
+  source: "cold-email" | "linkedin" | "apollo" | "tradeshow" | "referral" | "ads" | "broker";
   notes?: string;
 }
 

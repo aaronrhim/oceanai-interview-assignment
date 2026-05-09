@@ -2,10 +2,14 @@ import type { AgentEvent, AgentName } from "@/lib/types";
 import { makeId } from "@/lib/ids";
 import { eventBus } from "./event-bus";
 
+// Distributive omit: preserves the discriminated union across each member.
+type EventWithoutContext<E> = E extends AgentEvent ? Omit<E, "runId" | "agent" | "ts"> : never;
+export type EmitInput = EventWithoutContext<AgentEvent>;
+
 export interface AgentContext {
   runId: string;
   agent: AgentName;
-  emit: (e: Omit<AgentEvent, "runId" | "agent" | "ts">) => void;
+  emit: (e: EmitInput) => void;
 }
 
 export type AgentBody<TIn, TOut> = (input: TIn, ctx: AgentContext) => Promise<TOut>;
