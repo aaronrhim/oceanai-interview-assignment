@@ -14,3 +14,13 @@ export function GET() {
     alerts: alertBus.history(),
   });
 }
+
+/** Wipe all in-memory state. Lets the demo restart cleanly between rehearsals. */
+export function DELETE() {
+  records.leads.clear();
+  records.underwritings.clear();
+  records.contracts.clear();
+  eventBus.clear();
+  alertBus.clear();
+  return Response.json({ ok: true });
+}

@@ -16,7 +16,12 @@ export function TriggerBar() {
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [pending, startTransition] = useTransition();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const reset = useDemoStore((s) => s.reset);
+  const resetClient = useDemoStore((s) => s.reset);
+  const reset = () => {
+    // Server first, then client. Server reset clears records/eventBus/alertBus
+    // so a page refresh after this won't re-hydrate the old state.
+    void fetch("/api/state", { method: "DELETE" }).finally(() => resetClient());
+  };
 
   useEffect(() => {
     fetch("/api/pipeline")

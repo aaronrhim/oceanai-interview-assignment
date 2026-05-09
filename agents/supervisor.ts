@@ -28,9 +28,10 @@ const activeRuns = new Set<string>();
 
 function shouldFlag(event: AgentEvent): boolean {
   if (event.kind === "error") return true;
-  if (event.kind === "needs_human") return true;
+  // Note: agents emit `needs_human` for the dashboard's status pill, but the
+  // supervisor produces its own (more specific) alert from the `finished`
+  // event. Relaying the needs_human would just duplicate that alert.
   if (event.kind === "finished") {
-    // Check finished output for capital-policy triggers.
     const out = event.output as Record<string, unknown> | undefined;
     if (event.agent === "underwriting") {
       const a = (out?.assessment ?? out) as UnderwritingAssessment | undefined;
@@ -92,24 +93,35 @@ function heuristicAlert(event: AgentEvent): SupervisorAlert | null {
       suggested_action: "Inspect agent logs and re-run.",
     };
   }
-  if (event.kind === "needs_human") {
-    return {
-      ...base,
-      severity: "human",
-      title: `${event.agent} requires human review`,
-      body: event.reason,
-      suggested_action: event.suggested_action ?? "Review and decide.",
-    };
-  }
   if (event.kind === "finished" && event.agent === "underwriting") {
     const a = (event.output as { assessment: UnderwritingAssessment }).assessment;
-    if (a.recommended_credit_limit_usd > 500_000) {
+    const limit = a.recommended_credit_limit_usd;
+    // Order matters — the most specific / highest-stakes condition wins.
+    if (limit > 500_000) {
       return {
         ...base,
         severity: "human",
-        title: `Capital approval: $${a.recommended_credit_limit_usd.toLocaleString()}`,
-        body: `Underwriting recommends $${a.recommended_credit_limit_usd.toLocaleString()} (risk ${a.risk_score}, ${a.confidence} confidence). Above $500K policy threshold.`,
-        suggested_action: "Capital committee review.",
+        title: `Capital approval: $${limit.toLocaleString()}`,
+        body: `Underwriting recommends $${limit.toLocaleString()} (risk ${a.risk_score}, ${a.confidence} confidence). Above $500K policy threshold.`,
+        suggested_action: "Capital committee review before extending the line.",
+      };
+    }
+    if (a.confidence === "low") {
+      return {
+        ...base,
+        severity: "human",
+        title: "Low-confidence assessment — needs senior eyes",
+        body: `Risk ${a.risk_score} → $${limit.toLocaleString()} but the model flagged low confidence. ${a.red_flags.length ? `Flags: ${a.red_flags.slice(0, 2).map((f) => f.replace(/\.$/, "")).join("; ")}.` : "No clear red flags — borderline data."}`,
+        suggested_action: "Senior underwriter to sanity-check before exposure is committed.",
+      };
+    }
+    if (a.risk_score >= 40 && a.risk_score <= 55) {
+      return {
+        ...base,
+        severity: "warn",
+        title: `Borderline risk score ${a.risk_score} — manual decision`,
+        body: `Underwriting lands in the 40–55 manual-decision band ($${limit.toLocaleString()}, ${a.confidence} confidence). Outside the auto-approve and auto-reject zones.`,
+        suggested_action: "Senior underwriter to make the final call.",
       };
     }
   }

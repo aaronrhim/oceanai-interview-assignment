@@ -149,15 +149,24 @@ export async function runUnderwriting(input: UnderwritingInput): Promise<Underwr
     const pdf_url = `/underwriting/${id}/pdf`;
     await beat(220);
 
-    if (
-      assessment.confidence === "low" ||
-      (assessment.risk_score >= 40 && assessment.risk_score <= 55) ||
-      assessment.recommended_credit_limit_usd > 500_000
-    ) {
+    const limit = assessment.recommended_credit_limit_usd;
+    if (limit > 500_000) {
       ctx.emit({
         kind: "needs_human",
-        reason: `Underwriting outcome requires capital approval (score ${assessment.risk_score}, $${assessment.recommended_credit_limit_usd.toLocaleString()}, confidence ${assessment.confidence}).`,
-        suggested_action: "Capital committee review.",
+        reason: `Recommended limit $${limit.toLocaleString()} exceeds the $500K capital-policy threshold.`,
+        suggested_action: "Capital committee review before extending the line.",
+      });
+    } else if (assessment.confidence === "low") {
+      ctx.emit({
+        kind: "needs_human",
+        reason: `Confidence is low on this assessment (score ${assessment.risk_score}, $${limit.toLocaleString()}). Model is unsure.`,
+        suggested_action: "Senior underwriter to sanity-check before exposure is committed.",
+      });
+    } else if (assessment.risk_score >= 40 && assessment.risk_score <= 55) {
+      ctx.emit({
+        kind: "needs_human",
+        reason: `Borderline risk score ${assessment.risk_score} ($${limit.toLocaleString()}) — sits in the manual-decision band.`,
+        suggested_action: "Senior underwriter to make the final call.",
       });
     }
 

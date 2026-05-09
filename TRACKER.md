@@ -25,7 +25,7 @@
    - To enable live LLM, copy `.env.example` to `.env.local` and set the key.
 5. Continue from "Next up" below.
 
-## Current status (paused after landing page lands; smoke + polish pass next)
+## Current status (paused after smoke + polish pass; ready for live-LLM smoke)
 
 **Build status:** `npx next build` is GREEN. All routes compile.
 
@@ -68,28 +68,78 @@ three are correctly tree-split out (would add 200 kB+ to initial if eager).
 - `DEMO_MODE=fixtures` env (or missing API key) routes everything through
   heuristic fallbacks so the demo can run fully offline.
 
-**Not yet built:**
+**Polish-pass smoke (DEMO_MODE=fixtures) confirmed:**
 
-- **Smoke test + bundle audit + polish pass.** (Task #14)
+- All 3 seeds run end-to-end. Records persist (`/api/state` returns leads,
+  uw, contracts). Detail pages + PDFs all return 200.
+- Supervisor alerts now produce **one specific alert per condition** instead
+  of a generic relay + a special-case duplicate. Verified output:
+  - Alpha (clean): 0 alerts.
+  - Beta ($1.1M): 1 alert "Capital approval: $770,000".
+  - Gamma (small + low-confidence + Hard Terms): 2 alerts —
+    "Low-confidence assessment — needs senior eyes" with red flags listed,
+    and "Hard Terms drafted — sales should warm-handover".
+- Agent `needs_human` events still fire (drive the dashboard pill purple)
+  with case-specific reason text — no more "capital approval" text on $30K
+  cases.
+- Server-side reset works: `DELETE /api/state` clears records + event +
+  alert buses. Trigger-bar Reset button now hits this before clearing the
+  client store, so a refresh-after-reset doesn't re-hydrate stale data.
+
+**Not yet built / verified:**
+
+- **Live LLM smoke.** Has not been run in this session (no API key set).
+  Should run once with a real `ANTHROPIC_API_KEY` to verify token counters
+  populate, supervisor uses Opus 4.7 + extended thinking, and JSON-mode
+  parsing holds across all three workers.
 
 **Open verification gaps:**
 
-- Production build is green and `/` SSRs HTTP 200 with the full hero markup,
-  but the GSAP timeline + r3f orb + particles have only been smoke-checked at
-  the HTML level — no real browser run yet. They need a visual pass on the
-  demo machine.
-- View Transition hop (`/` → `/dashboard` via `document.startViewTransition`)
-  has not been visually verified in a browser that supports the API; CSS
-  rules in `globals.css` (`::view-transition-old/new(root)`) should fire when
-  it does. Needs visual confirmation.
-- A full live-pipeline run hasn't been done in this session (no API key set).
-  Smoke test should run with both `DEMO_MODE=fixtures` and a real key.
-- The dashboard mounts the SSE hook unconditionally; need to verify
-  reconnect behavior when the dev server restarts.
+- Visual run in a real browser. The GSAP timeline, r3f orb, particles, and
+  the `/` → `/dashboard` View Transition cross-fade have only been
+  smoke-checked at the HTML/SSR level. They need a pixel pass on the demo
+  machine.
+- `prefers-reduced-motion` visual confirmation (Chrome devtools toggle).
+- The dashboard mounts the SSE hook unconditionally; reconnect behavior
+  on dev-server restart not yet verified.
 
 ## Decisions log
 
 Append-only. Newest at the top.
+
+### 2026-05-08 — Polish pass: alert dedup, status-pill flicker fix, server reset
+
+Five fixes from the end-to-end smoke (all 3 seeds, fixtures mode):
+
+- **`agents/underwriting.ts`** — the `needs_human` reason text was a single
+  generic line ("Underwriting outcome requires capital approval…") regardless
+  of which of the three trigger conditions fired. For gamma's $30K
+  low-confidence case this said "capital approval" wrongly. Split into
+  three branches: capital threshold ($500K+), low confidence, mid-score
+  manual band — each with its own specific reason + suggested_action.
+- **`agents/supervisor.ts`** — the supervisor used to relay **needs_human**
+  events as alerts AND emit its own specific alert from the **finished**
+  event for the same condition. Demo would surface 2 redundant alerts per
+  flagged run. Removed the needs_human relay (the more-specific finished-
+  derived alert wins) and expanded `heuristicAlert` to handle low-confidence
+  and mid-score underwriting cases (previously fell through to null after
+  shouldFlag returned true). Result: one specific alert per flagged
+  condition. Also stripped trailing periods from red-flag joins so bodies
+  don't end in "..".
+- **`lib/store.ts` ingestEvent** — `needs_human → finished` arrived back-to-
+  back from agents that do both, so the dashboard pill flickered purple
+  for milliseconds then went green. Made `finished` a no-op when the agent
+  is currently in `needs_human`. Next `started` resets to running.
+- **`app/api/state/route.ts`** — added `DELETE` handler that clears records
+  + eventBus + alertBus. Previously the trigger-bar Reset button was
+  client-only; refreshing the page right after Reset re-hydrated the prior
+  run's state from /api/state. Demo footgun.
+- **`components/trigger-bar.tsx`** — Reset now `fetch("/api/state",
+  { method: "DELETE" })` then clears the client store. Page-refresh-safe.
+
+Also confirmed during smoke: detail pages + PDFs all 200, dashboard still
+renders cleanly, build still GREEN with same bundle sizes (156 kB / / and
+169 kB / /dashboard).
 
 ### 2026-05-08 — Landing page (`/`) built; gsap + r3f + tsparticles all wired
 
@@ -269,4 +319,5 @@ oceanai/
 - `f94427c` feat: scaffold Next 15 + R19 + Tailwind v4 + agent infra
 - `40a0d7c` feat: agents (lead/underwriting/contract/supervisor) + dashboard + SSE
 - `8d98a7d` feat: detail pages (lead/underwriting/contract) + react-pdf reports
-- *next* checkpoint: landing page (gsap + r3f + tsparticles) (about to commit)
+- `e592d99` feat: landing page with gsap hero + r3f orb + tsparticles bg
+- *next* checkpoint: polish pass — alert dedup + reset endpoint (about to commit)

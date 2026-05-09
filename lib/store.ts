@@ -84,7 +84,10 @@ export const useDemoStore = create<DemoState>()(
             next.tokensIn += e.tokens_in;
             next.tokensOut += e.tokens_out;
           } else if (e.kind === "finished") {
-            next.status = "ok";
+            // needs_human is "this run wants attention" — preserve it past
+            // the agent's own finish so the purple pill doesn't flicker
+            // straight to ok. The next "started" resets to running.
+            if (next.status !== "needs_human") next.status = "ok";
           } else if (e.kind === "error") {
             next.status = "error";
           } else if (e.kind === "needs_human") {
