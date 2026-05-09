@@ -1,0 +1,29 @@
+[
+  {
+    "id": "lead_seed_alpha",
+    "name": "Priya Mehta",
+    "company": "Lumen Foods Pte Ltd",
+    "email": "priya@lumenfoods.sg",
+    "requestedCreditUsd": 250000,
+    "source": "linkedin",
+    "notes": "Importer of premium Australian beef into SG/MY. 4 yrs operating."
+  },
+  {
+    "id": "lead_seed_beta",
+    "name": "Andre Kowalski",
+    "company": "Vela Marine Supplies",
+    "email": "andre@velamarine.eu",
+    "requestedCreditUsd": 1100000,
+    "source": "broker",
+    "notes": "Marine parts distributor, EU-wide. Margin compressed last 2 quarters."
+  },
+  {
+    "id": "lead_seed_gamma",
+    "name": "Wenjie Tan",
+    "company": "Northstar Electronics",
+    "email": "wj.tan@northstar-elec.com",
+    "requestedCreditUsd": 75000,
+    "source": "cold-email",
+    "notes": "Small consumer-electronics reseller. Limited credit history."
+  }
+]

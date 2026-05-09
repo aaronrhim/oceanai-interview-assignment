@@ -1,0 +1,29 @@
+{
+  "Lumen Foods Pte Ltd": {
+    "domain": "lumenfoods.sg",
+    "industry": "Food & Beverage Import",
+    "employees": 38,
+    "fundingStage": "bootstrapped",
+    "hqCountry": "SG",
+    "socials": { "linkedin": "https://linkedin.com/company/lumen-foods" },
+    "techStack": ["NetSuite", "Shopify", "GoCardless"]
+  },
+  "Vela Marine Supplies": {
+    "domain": "velamarine.eu",
+    "industry": "Marine & Industrial Distribution",
+    "employees": 142,
+    "fundingStage": "growth",
+    "hqCountry": "PL",
+    "socials": { "linkedin": "https://linkedin.com/company/vela-marine" },
+    "techStack": ["SAP B1", "Salesforce", "Xero"]
+  },
+  "Northstar Electronics": {
+    "domain": "northstar-elec.com",
+    "industry": "Consumer Electronics Reseller",
+    "employees": 9,
+    "fundingStage": "bootstrapped",
+    "hqCountry": "MY",
+    "socials": {},
+    "techStack": ["QuickBooks", "Shopify"]
+  }
+}

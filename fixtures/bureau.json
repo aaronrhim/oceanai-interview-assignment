@@ -1,0 +1,26 @@
+{
+  "Lumen Foods Pte Ltd": {
+    "bureau": "dunn-bradstreet",
+    "score": 78,
+    "delinquencies_24m": 0,
+    "bankruptcies": 0,
+    "utilization": 0.34,
+    "trade_references": 6
+  },
+  "Vela Marine Supplies": {
+    "bureau": "experian",
+    "score": 61,
+    "delinquencies_24m": 2,
+    "bankruptcies": 0,
+    "utilization": 0.71,
+    "trade_references": 11
+  },
+  "Northstar Electronics": {
+    "bureau": "equifax",
+    "score": 48,
+    "delinquencies_24m": 1,
+    "bankruptcies": 0,
+    "utilization": 0.88,
+    "trade_references": 2
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "Lumen Foods Pte Ltd": {
+    "revenue_ttm_usd": 4800000,
+    "ebitda_margin": 0.18,
+    "cash_on_hand_usd": 620000,
+    "current_ratio": 1.6,
+    "debt_to_equity": 0.42,
+    "monthly_inflow_usd": [380000, 420000, 410000, 460000, 435000, 480000, 470000, 510000, 490000, 520000, 540000, 560000],
+    "monthly_outflow_usd": [310000, 330000, 345000, 360000, 350000, 380000, 370000, 400000, 395000, 410000, 425000, 440000]
+  },
+  "Vela Marine Supplies": {
+    "revenue_ttm_usd": 21500000,
+    "ebitda_margin": 0.06,
+    "cash_on_hand_usd": 880000,
+    "current_ratio": 1.05,
+    "debt_to_equity": 1.7,
+    "monthly_inflow_usd": [1700000, 1620000, 1550000, 1480000, 1610000, 1490000, 1450000, 1380000, 1410000, 1500000, 1530000, 1495000],
+    "monthly_outflow_usd": [1620000, 1580000, 1540000, 1500000, 1620000, 1500000, 1490000, 1420000, 1430000, 1490000, 1520000, 1490000]
+  },
+  "Northstar Electronics": {
+    "revenue_ttm_usd": 540000,
+    "ebitda_margin": 0.09,
+    "cash_on_hand_usd": 38000,
+    "current_ratio": 0.95,
+    "debt_to_equity": 0.85,
+    "monthly_inflow_usd": [42000, 38000, 41000, 45000, 39000, 44000, 47000, 43000, 48000, 50000, 49000, 52000],
+    "monthly_outflow_usd": [40000, 39000, 41000, 42000, 40000, 43000, 44000, 42000, 45000, 46000, 47000, 49000]
+  }
+}
